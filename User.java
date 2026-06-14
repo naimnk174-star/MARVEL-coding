@@ -1,3 +1,4 @@
+// User.java
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.io.Console;
@@ -15,95 +16,85 @@ class User {
     this.role = role;
   }
 
-  public String getRole() {
-    return role;
-  }
+  public String getRole() { return role; }
 
-  public boolean isAdmin() {
-    return this.role == "ADMIN";
-  }
-
-  public boolean isLecturer() {
-    return this.role == "LECTURER";
-  }
-
-  public boolean isStudent() {
-    return this.role == "STUDENT";
-  }
-
-  public String toString() {
-    return username + "\t" + password;
-  }
-
-  public String getAcctInfo() {
-    return username;
-  }
+  // FIXED: Changed from '==' reference identity comparison to safe logical content check
+  public boolean isAdmin() { return "ADMIN".equalsIgnoreCase(this.role); }
+  public boolean isLecturer() { return "LECTURER".equalsIgnoreCase(this.role); }
+  public boolean isStudent() { return "STUDENT".equalsIgnoreCase(this.role); }
 
   public boolean auth(String username, String password) {
-    //System.out.println(username.equals(this.username) && password.equals(this.password));
     return (username.equals(this.username) && password.equals(this.password));
   }
 
-  public static User login(ArrayList<User> users) {
+  public static User login(ArrayList users) {
     Scanner scn = new Scanner(System.in);
-
+    
     System.out.println(">>> SYSTEM LOGIN <<<");
     System.out.println("1. Student");
     System.out.println("2. Lecturer");
     System.out.println("3. Admin");
     System.out.println("0. Back to Main Menu");
     System.out.print("\nEnter role (0-3): ");
-
-    int roleChoice = scn.nextInt();
-    scn.nextLine(); // Clear buffer
     
-    String targetRole = "";
-    if (roleChoice == 1) {
-        targetRole = "STUDENT";
-        System.out.println("\n-------------------------------------\n        STUDENT LOGIN\n-------------------------------------");
-    } else if (roleChoice == 2) {
-        targetRole = "LECTURER";
-        System.out.println("\n-------------------------------------\n        LECTURER LOGIN\n-------------------------------------");
-    } else if (roleChoice == 3) {
-        targetRole = "ADMIN";
-        System.out.println("\n-------------------------------------\n        ADMIN LOGIN\n-------------------------------------");
+    int choice;
+    try {
+        choice = Integer.parseInt(scn.nextLine());
+    } catch (Exception e) {
+        return null;
+    }
+    
+    String roleTag = "";
+    if (choice == 1) { 
+        roleTag = "STUDENT"; 
+        System.out.println("\n-------------------------------------\n          STUDENT LOGIN\n-------------------------------------"); 
+    } else if (choice == 2) { 
+        roleTag = "LECTURER"; 
+        System.out.println("\n-------------------------------------\n          LECTURER LOGIN\n-------------------------------------"); 
+    } else if (choice == 3) { 
+        roleTag = "ADMIN"; 
+        System.out.println("\n-------------------------------------\n          ADMIN LOGIN\n-------------------------------------"); 
     } else {
         return null;
     }
 
-    System.out.print("Username: ");
+    System.out.print("Enter Username: ");
     String username = scn.nextLine();
-    System.out.print("Password: ");
-    String password = scn.nextLine();
 
-    Console console = System.console();
-    if (console != null) {
-        char[] passChars = console.readPassword();
-        password = new String(passChars);
+    System.out.print("Enter Password: ");
+    String password = "";
+    
+    Console cons = System.console();
+    if (cons != null) {
+        // Securely hides input typing from display automatically 
+        char[] passwd = cons.readPassword();
+        password = new String(passwd);
     } else {
-        // Fallback if running inside IDE terminal where Console object is null
+        // Fallback option so execution works normally inside IDE consoles
         password = scn.nextLine();
     }
 
     System.out.println("\nAuthenticating...");
-
-    for (int i = 0; i < users.size(); i++) {
-      User user = (User)users.get(i);
-      if (user.auth(username, password)) {
-        System.out.println("Authenticate: " + user.getAcctInfo());
-        System.out.println();
+    for (Object obj : users) {
+      User user = (User) obj;
+      if (user.auth(username, password) && user.getRole().equalsIgnoreCase(roleTag)) {
+        System.out.println("✓ Login Successful!");
+        System.out.printf("Welcome, %s!\n\n", user.getAcctInfo());
         return user;
       }
     }
 
-    System.out.println("Invalid username and password!\n");
+    System.out.println("Error: Invalid credentials or mismatched dashboard role selection!\n");
     return null;
   }
   
   public static void pressEnterContinue() {
     Scanner scn = new Scanner(System.in);
-    System.out.print("Press enter to contnue...");
-    String enter = scn.nextLine();
+    System.out.print("Press [Enter] to return to Dashboard...");
+    scn.nextLine();
     System.out.println();
   }
+  
+  public String getAcctInfo() { return username; }
+  public String toString() { return username + "\t" + password; }
 }

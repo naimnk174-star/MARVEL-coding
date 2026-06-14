@@ -1,217 +1,157 @@
+// Main.java
 import java.util.Scanner;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
-import java.util.stream.Collectors;
-import java.io.File;
-import java.io.FileNotFoundException;
 
 public class Main {
   public static void main(String[] args) {
-    User currentUser = null;
-    ArrayList users = loadUsers();
-    ArrayList courses = loadCourses();
+    // 1. Manually initialize the user and course data arrays in memory
+    ArrayList users = loadHardcodedUsers();
+    ArrayList courses = loadHardcodedCourses();
     
-    assignCourse(users, courses);
-
-    System.out.println();
+    // 2. Establish relationships in memory (Assign Lecturers to Courses)
+    assignHardcodedCourses(users, courses);
+    
+    // 3. Establish student enrollment records and assign mock marks
+    registerStudentMockMarks(users, courses);
 
     System.out.println("Course Mark & Grade Management System");
-    System.out.println("-------------------------------------");
+    System.out.println("=====================================");
 
     String[] startMenus =  {"Login", "Exit"};
-    String[] adminMenus =  {"List Courses", "Course Info", "List Students", "List Lecturer", "Assign Course", "Logout"};
-    String[] lectMenus =  {"List Assigned Courses", "List Students", "Update Marks", "Logout"};
-    String[] studMenus =  {"List Registered Courses", "View Grades & CGPA", "Logout"};
+    String[] adminMenus =  {"List Courses", "Course Info", "Logout"};
+    String[] lectMenus =   {"View Assigned Course Rosters", "Update Student Marks", "Logout"};
+    String[] studMenus =   {"View Registered Courses & Marks", "View Full Academic Transcript (CGPA)", "Logout"};
 
+    User currentUser = null;
     boolean exit = false;
+    
     while (!exit) {
       if (currentUser == null) {
-        if (chooseMenu(startMenus) == "Login") {
+        String baseChoice = chooseMenu(startMenus, "WELCOME MENU");
+        if (baseChoice.equals("Login")) {
           currentUser = User.login(users);
         } else {
+          System.out.println("Exiting system...\nGoodbye!");
           exit = true;
         }
       } else {
         if (currentUser.isAdmin()) {
-          String menu = chooseMenu(adminMenus);
+          String menu = chooseMenu(adminMenus, "ADMIN DASHBOARD");
+          if (menu.equals("Logout")) currentUser = null;
+          else ((Admin)currentUser).runTask(menu, users, courses);
+        } 
+        else if (currentUser.isLecturer()) {
+          String menu = chooseMenu(lectMenus, "LECTURER DASHBOARD");
+          if (menu.equals("Logout")) currentUser = null;
+          else ((Lecturer)currentUser).runTask(menu, users);
+        } 
+        else if (currentUser.isStudent()) {
+          String menu = chooseMenu(studMenus, "STUDENT DASHBOARD");
+          if (menu.equals("Logout")) currentUser = null;
+          else ((Student)currentUser).runTask(menu);
+        }
+      }
+    }
+  }
 
-          if (menu == "Logout") {
-            currentUser = null;
-          } else {
-            ((Admin)currentUser).runTask(menu, users, courses);
+  // --- HARDCODED DATA SEEDING METHODS (REPLACES THE CSV FUNCTIONS) ---
+
+  public static ArrayList loadHardcodedUsers() {
+    ArrayList list = new ArrayList();
+    
+    // Default Admin
+    list.add(new Admin("admin", "abc123", "ADMIN"));
+    
+    // Lecturer Account requested: username 'azra' and password '6789'
+    list.add(new Lecturer("Dr. Azra", "L002", "azra", "6789"));
+    
+    // Student Account requested: username 'nkmnrf' and password '12345'
+    list.add(new Student("Naik Muhammad Noorfazi", "CS19002", "nkmnrf", "12345"));
+    
+    return list;
+  }
+  
+  public static ArrayList loadHardcodedCourses() {
+    ArrayList list = new ArrayList();
+    
+    // Creating manual system courses directly (Name, Code, Credits)
+    list.add(new Course("Information Systems", "SECI1013", 3));
+    list.add(new Course("Object-Oriented Programming", "SECJ1013", 3));
+    
+    return list;
+  }
+  
+  public static void assignHardcodedCourses(ArrayList users, ArrayList courses) {
+    // Locate the hardcoded objects we created above
+    Course c1 = (Course) courses.stream().filter(c -> ((Course)c).getCode().equals("SECI1013")).findFirst().orElse(null);
+    Course c2 = (Course) courses.stream().filter(c -> ((Course)c).getCode().equals("SECJ1013")).findFirst().orElse(null);
+    Lecturer lect = (Lecturer) users.stream().filter(u -> (u instanceof Lecturer) && ((Lecturer)u).getWorkID().equals("L002")).findFirst().orElse(null);
+    
+    // Assign relationship linkages in memory
+    if (lect != null) {
+      if (c1 != null) {
+        lect.assignCourse(new CourseAssg(c1, "2025/2026", 1));
+        c1.assignLecturer(new LecturerAssg(lect, "2025/2026", 1));
+      }
+      if (c2 != null) {
+        lect.assignCourse(new CourseAssg(c2, "2025/2026", 1));
+        c2.assignLecturer(new LecturerAssg(lect, "2025/2026", 1));
+      }
+    }
+  }
+
+  public static void registerStudentMockMarks(ArrayList users, ArrayList courses) {
+    for (Object u : users) {
+      if (u instanceof Student) {
+        Student s = (Student) u;
+        if (s.getMatricNo().equalsIgnoreCase("CS19002")) {
+          Course c1 = (Course) courses.stream().filter(c -> ((Course)c).getCode().equals("SECI1013")).findFirst().orElse(null);
+          Course c2 = (Course) courses.stream().filter(c -> ((Course)c).getCode().equals("SECJ1013")).findFirst().orElse(null);
+          
+          if (c1 != null) {
+              StudentReg sr1 = new StudentReg(s, "2025/2026", 1);
+              c1.registerStudent(sr1);
+              s.registerCourse(new CourseReg(c1, "2025/2026", 1, new Mark(42, 43))); // 85 -> Grade: A
           }
-
-        } else if (currentUser.isLecturer()) {
-          String menu = chooseMenu(lectMenus);
-
-          if (menu == "Logout") {
-            currentUser = null;
-          } else {
-            ((Lecturer)currentUser).runTask(menu);
-          }
-
-        } else if (currentUser.isStudent()) {
-          String menu = chooseMenu(studMenus);
-
-          if (menu == "Logout") {
-            currentUser = null;
-          } else {
-            ((Student)currentUser).runTask(menu);
+          if (c2 != null) {
+              StudentReg sr2 = new StudentReg(s, "2025/2026", 1);
+              c2.registerStudent(sr2);
+              s.registerCourse(new CourseReg(c2, "2025/2026", 1, new Mark(38, 38))); // 76 -> Grade: B+
           }
         }
       }
     }
   }
 
-  /////////////////////////////////////////////////////////////////////////////
+  // --- INTERFACE UTILITIES ---
 
-  public static String chooseMenu(String[] menus) {
-    for (int i = 0; i < menus.length; i++) {
+  public static String chooseMenu(String[] menus, String title) {
+    System.out.println("=====================================");
+    System.out.println("           " + title);
+    System.out.println("=====================================");
+    
+    for (int i = 0; i < menus.length - 1; i++) {
       System.out.println((i+1) + ". " + menus[i]);
     }
+    System.out.println("0. " + menus[menus.length - 1]);
+    System.out.println("-------------------------------------");
 
-    int choice = 0;
-
-    while (choice < 1 || choice > menus.length) {
-      Scanner scn = new Scanner(System.in);
-      System.out.printf("Enter your choice (1-%d): ", menus.length);
-      choice = scn.nextInt();
+    Scanner scn = new Scanner(System.in);
+    int choice = -1;
+    while (choice < 0 || choice >= menus.length) {
+      System.out.print("ENTER CHOICE: ");
+      try {
+          int input = Integer.parseInt(scn.nextLine());
+          if (input == 0) {
+              choice = menus.length - 1; 
+          } else if (input > 0 && input < menus.length) {
+              choice = input - 1;
+          }
+      } catch (Exception e) {
+          // ignore parsing errors and prompt again
+      }
     }
-
     System.out.println();
-
-    return menus[choice - 1];
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-  
-  // create user instances (admin, lecturers, and students) 
-  public static ArrayList loadUsers() {
-    ArrayList list = new ArrayList();
-
-    System.out.println("Load user (Admin)...");
-    // new Admin(username, password, role)
-    list.add(new Admin("admin", "abc123", "ADMIN"));
-    
-    System.out.println();
-
-    System.out.println("Load users (Lecturer)...");
-    ArrayList<String> lectList = readCSVFile("../CSV/Lecturers.csv");
-
-    for (int i = 0; i < lectList.size(); i++) {
-      String line = lectList.get(i);
-      String[] data = line.split(","); // Assuming comma as delimiter
-
-      // new Lecturer(name, workID, username, password);
-      Lecturer lect = new Lecturer(data[0], data[1], data[2], data[3]);
-      list.add(lect);
-      System.out.println(lect);
-    }
-
-    System.out.println();
-
-    System.out.println("Load users (Students)...");
-    ArrayList<String> studList = readCSVFile("../CSV/Students.csv");
-
-    for (int i = 0; i < studList.size(); i++) {
-      String line = studList.get(i);
-      String[] data = line.split(","); // Assuming comma as delimiter
-
-      // new Student(name, matricNo, username, password)
-      Student stud = new Student(data[0], data[1], data[2], data[3]);
-      list.add(stud);
-      System.out.println(stud);
-    }
-    
-    System.out.println();
-
-    return list;
-  }
-  
-   // create course instances
-  public static ArrayList loadCourses() {
-    ArrayList list = new ArrayList();
-    
-    System.out.println("Load courses...");
-    ArrayList<String> courseList = readCSVFile("../CSV/Courses.csv");
-    
-    for (int i = 0; i < courseList.size(); i++) {
-      String line = courseList.get(i);
-      String[] data = line.split(","); // Assuming comma as delimiter
-
-      // new Course(name, code, credits);
-      Course crs = new Course(data[0], data[1], Integer.parseInt(data[2]));
-      list.add(crs);
-      System.out.println(crs);
-    }
-
-    System.out.println();
-    
-    return list;
-  }
-  
-  // assign courses to lecturersCourseAssg.csv
-  public static void assignCourse(ArrayList users, ArrayList courses) {
-    System.out.println("Assign courses to lecturers...");
-    ArrayList<String> crsAssgList = readCSVFile("../CSV/CourseAssg.csv");
-    
-    for (int i = 0; i < crsAssgList.size(); i++) {
-      String line = crsAssgList.get(i);
-      String[] data = line.split(","); // Assuming comma as delimiter
-      
-      String courseCode = data[0];
-      String workID = data[1];
-      
-      // find the course
-      Course crs = (Course)courses.stream().filter(c -> ((Course)c).getCode().equals(courseCode)).findFirst().get();
-      
-      // find the lecturer
-      Stream<Lecturer> lectStream = users.stream().filter(u -> ((User)u).isLecturer());
-      Lecturer lect = lectStream.filter(u -> u.getWorkID().equals(workID)).findFirst().get();
-      
-      // assign lecturer's course and course's lecturer
-      System.out.println(crs + " -> " + lect);
-      lect.assignCourse(new CourseAssg(crs, "2005/2006", 1));
-      crs.assignLecturer(new LecturerAssg(lect, "2005/2006", 1));
-      
-      // find the lecturer and assign with the corresponding course
-      /*lectStream.forEach(u -> {
-        if (u.getWorkID().equals(workID)) {
-          
-          
-        }
-      });*/
-      
-    }
-  }
-  
-  // register students' courses
-  public static void registerCourse(ArrayList users) {
-    
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-
-  // return array of String separate
-  public static ArrayList readCSVFile(String csvFile) {
-    ArrayList<String> strList = new ArrayList<>();
-
-    System.out.printf("Read and list CSV file content (%s):\n", csvFile);
-    
-    try (Scanner scanner = new Scanner(new File(csvFile))) {
-        while (scanner.hasNextLine()) {
-          // Read file content and remove Byte Order Mark (BOM) if present
-          // The BOM included by Excel when save the file as CSV
-          String line = scanner.nextLine().replace("\uFEFF", "");
-          strList.add(line);
-          System.out.println(line);
-        }
-    } catch (FileNotFoundException e) {
-        e.printStackTrace();
-    }
-
-    return strList;
+    return menus[choice];
   }
 }
