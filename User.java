@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.io.Console;
 
 class User {
   private String username;
@@ -45,11 +46,46 @@ class User {
 
   public static User login(ArrayList<User> users) {
     Scanner scn = new Scanner(System.in);
+
+    System.out.println(">>> SYSTEM LOGIN <<<");
+    System.out.println("1. Student");
+    System.out.println("2. Lecturer");
+    System.out.println("3. Admin");
+    System.out.println("0. Back to Main Menu");
+    System.out.print("\nEnter role (0-3): ");
+
+    int roleChoice = scn.nextInt();
+    scn.nextLine(); // Clear buffer
+    
+    String targetRole = "";
+    if (roleChoice == 1) {
+        targetRole = "STUDENT";
+        System.out.println("\n-------------------------------------\n        STUDENT LOGIN\n-------------------------------------");
+    } else if (roleChoice == 2) {
+        targetRole = "LECTURER";
+        System.out.println("\n-------------------------------------\n        LECTURER LOGIN\n-------------------------------------");
+    } else if (roleChoice == 3) {
+        targetRole = "ADMIN";
+        System.out.println("\n-------------------------------------\n        ADMIN LOGIN\n-------------------------------------");
+    } else {
+        return null;
+    }
+
     System.out.print("Username: ");
     String username = scn.nextLine();
-
     System.out.print("Password: ");
     String password = scn.nextLine();
+
+    Console console = System.console();
+    if (console != null) {
+        char[] passChars = console.readPassword();
+        password = new String(passChars);
+    } else {
+        // Fallback if running inside IDE terminal where Console object is null
+        password = scn.nextLine();
+    }
+
+    System.out.println("\nAuthenticating...");
 
     for (int i = 0; i < users.size(); i++) {
       User user = (User)users.get(i);
