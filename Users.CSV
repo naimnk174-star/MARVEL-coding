@@ -1,0 +1,4 @@
+username,password,role,name,id
+admin,abc123,ADMIN,,
+azra,6789,LECTURER,Dr. Azra,L002
+nkmnrf,12345,STUDENT,Naik Muhammad Noorfazi,CS19002
