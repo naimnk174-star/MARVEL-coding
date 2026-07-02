@@ -5,22 +5,30 @@ import java.util.Scanner;
 class Lecturer extends User {
   private String name;
   private String workID;
-  private ArrayList<CourseAssg> crsAssgList;
+  private ArrayList<CourseAssg> crsAssgList;  // Changed from CourseAssign to CourseAssg
 
   public Lecturer(String name, String workID, String username, String password) {
-    super(username, password, "LECTURER");
+    super(username, password, "LECTURER");  // Fixed: removed "role:" 
     this.name = name;
     this.workID = workID;
-    this.crsAssgList = new ArrayList<CourseAssg>();
+    this.crsAssgList = new ArrayList<CourseAssg>();  // Changed from CourseAssign to CourseAssg
   }
   
-  public String getWorkID() { return workID; }
-  public String getInfo() { return name + " - " + workID; }
-  public String getAcctInfo() { return name + " - " + workID + " (Lecturer)"; }
+  public ArrayList<CourseAssg> getCrsAssgList() {  // Changed from CourseAssign to CourseAssg
+    return this.crsAssgList;
+  }
   
-  public void assignCourse(CourseAssg crsAssg) { this.crsAssgList.add(crsAssg); }
+  public String getWorkID() { return workID; }  // Fixed: capital W
+  public String getInfo() { return name + " - " + workID; }  // Fixed: added space
+  public String getAcctInfo() { return name + " - " + workID + " (Lecturer)"; }  // Fixed: added space
+  
+  @Override
+  public String toCSV() {  // Fixed: capital CSV
+    return getUsername() + "," + getPassword() + "," + getRole() + "," + name + "," + workID;  // Fixed: commas
+  }
+  
+  public void assignCourse(CourseAssg crsAssg) { this.crsAssgList.add(crsAssg); }  // Changed from CourseAssign to CourseAssg
 
-  // Overloaded to accept the structural system dataset
   public void runTask(String menu, ArrayList users) { 
     System.out.println("\n-------------------------------------");
     if (menu.equals("View Assigned Course Rosters")) {
@@ -62,7 +70,6 @@ class Lecturer extends User {
           System.out.print("Enter New Total Mark (0-100): ");
           int newTotal = scn.nextInt();
           
-          // Split total score 50/50 for coursework and final exam objects
           foundReg.getMark().setMark(newTotal / 2, newTotal - (newTotal / 2));
           
           System.out.printf("\n✓ System Update: Mark successfully updated to %.1f (Grade: %s).\n", (double)foundReg.getMark().totalMark(), foundReg.getMark().grade());

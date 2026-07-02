@@ -7,6 +7,11 @@ class Admin extends User {
     super(username, password, role);
   }
   
+  @Override
+  public String toCSV() {
+    return getUsername() + "," + getPassword() + "," + getRole() + ",,";
+  }
+  
   public String getAcctInfo() { return "Admin (System Administrator)"; }
 
   public void runTask(String menu, ArrayList users, ArrayList courses) {

@@ -17,14 +17,20 @@ class User {
   }
 
   public String getRole() { return role; }
+  public String getUsername() { return username; }
+  public String getPassword() { return password; }
 
-  // FIXED: Changed from '==' reference identity comparison to safe logical content check
   public boolean isAdmin() { return "ADMIN".equalsIgnoreCase(this.role); }
   public boolean isLecturer() { return "LECTURER".equalsIgnoreCase(this.role); }
   public boolean isStudent() { return "STUDENT".equalsIgnoreCase(this.role); }
 
   public boolean auth(String username, String password) {
     return (username.equals(this.username) && password.equals(this.password));
+  }
+
+  // For CSV export
+  public String toCSV() {
+    return username + "," + password + "," + role;
   }
 
   public static User login(ArrayList users) {
@@ -66,11 +72,9 @@ class User {
     
     Console cons = System.console();
     if (cons != null) {
-        // Securely hides input typing from display automatically 
         char[] passwd = cons.readPassword();
         password = new String(passwd);
     } else {
-        // Fallback option so execution works normally inside IDE consoles
         password = scn.nextLine();
     }
 
